@@ -53,7 +53,7 @@ Step by step:
 1. **Claude Code calls the hook** and passes it JSON: the project folder, the path to the session transcript, and `stop_hook_active` (whether this finish was already blocked once).
 2. **Quiet checks.** The hook stays silent if `EXPLAIN_BACK=off` is set, if this is the second try (so it never loops), or if nobody is watching. Headless runs like `claude -p`, cron and launchd jobs set `CLAUDE_CODE_SESSION_ATTENDED=0`.
 3. **What changed this turn.** It reads the transcript backwards to your last message and collects the `Edit`, `MultiEdit`, `Write` and `NotebookEdit` calls since then.
-4. **Does it count.** Files outside the project folder and `.md` and `.txt` files are ignored. If fewer than 3 lines were written, it stays silent.
+4. **Does it count.** Only code and config files inside the project folder count, matched by extension (`.kt`, `.py`, `.ts`, `.json`…, plus `Dockerfile` and `Makefile`). Prose like README or LICENSE never counts. If fewer than 3 lines were written, it stays silent.
 5. **Ask for the explain-back.** It prints `{"decision": "block", "reason": "..."}`. Claude Code doesn't let Claude finish and gives it the reason as new instructions.
 
 It stays silent for:
@@ -62,7 +62,7 @@ It stays silent for:
 |---|---|
 | Questions, reading code | No edits |
 | Typo fixes | Fewer than 3 lines |
-| Notes in `.md` / `.txt` | Prose, not code |
+| README, LICENSE, notes, docs | Prose, not code |
 | Scratch files outside the project | Not your project's code |
 | `claude -p`, cron, launchd | Nobody there to answer |
 | `EXPLAIN_BACK=off claude` | Switched off |
@@ -110,6 +110,7 @@ You can also ask for an explain-back on demand: `/explain-back`.
 ## Limits
 
 - Edits made through shell commands (`sed`, heredocs) aren't seen.
+- A language whose extension isn't in the `CODE` list in `hook.py` is ignored until you add it.
 - "The project" is the folder Claude Code started in, not the git root.
 - Line numbers in an explain-back come from Claude and are sometimes off by one.
 - `CLAUDE_CODE_SESSION_ATTENDED` isn't documented. If a future Claude Code drops it, set `EXPLAIN_BACK=off` in your scheduled jobs.

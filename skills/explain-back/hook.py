@@ -9,7 +9,18 @@ import json, os, sys, tempfile
 
 EDIT_TOOLS = {"Edit", "MultiEdit", "Write", "NotebookEdit"}
 MIN_LINES = 3  # ponytail: skip typo-sized edits; raise it if the explain-back feels naggy
-PROSE = (".md", ".txt")  # notes and docs aren't code anyone has to maintain
+# Only these count. Prose (README, LICENSE, notes) and binaries never trigger an explain-back.
+# ponytail: a fixed list; add an extension here when a language is missing
+CODE = {".kt", ".kts", ".java", ".scala", ".groovy", ".gradle", ".py", ".ipynb", ".js", ".jsx", ".mjs",
+        ".cjs", ".ts", ".tsx", ".vue", ".svelte", ".html", ".css", ".scss", ".go", ".rs", ".swift",
+        ".m", ".mm", ".c", ".h", ".cc", ".cpp", ".hpp", ".cs", ".rb", ".php", ".dart", ".lua", ".sh",
+        ".bash", ".zsh", ".sql", ".json", ".yaml", ".yml", ".toml", ".xml", ".properties"}
+CODE_NAMES = {"Dockerfile", "Makefile"}
+
+
+def is_code(path):
+    name = os.path.basename(path)
+    return name in CODE_NAMES or os.path.splitext(name)[1].lower() in CODE
 
 PROMPT = """Before you finish, explain back the code change you just made to the person who will own it. Don't repeat what your last message already said. Under 150 words, plain language, no code dump:
 1. What now happens differently: behavior the user would notice, not a list of files.
@@ -41,7 +52,7 @@ def edited_lines_this_turn(transcript_path, project_dir):
                 if isinstance(c, dict) and c.get("type") == "tool_use" and c.get("name") in EDIT_TOOLS:
                     inp = c.get("input") or {}
                     path = os.path.realpath(inp.get("file_path") or inp.get("notebook_path") or "")
-                    if not root or not path.startswith(root) or path.endswith(PROSE):
+                    if not root or not path.startswith(root) or not is_code(path):
                         continue
                     text = inp.get("new_string") or inp.get("content") or inp.get("new_source") or ""
                     text += "".join(ed.get("new_string", "") for ed in inp.get("edits") or [])
@@ -92,6 +103,12 @@ def selftest():
     assert run(outside) is None, "files outside the project should pass"
     notes = transcript(user("notes"), tool("Write", file_path=os.path.join(proj, "NOTES.md"), content=five), result)
     assert run(notes) is None, "prose files should pass"
+    lic = transcript(user("add license"), tool("Write", file_path=os.path.join(proj, "LICENSE"), content=five), result)
+    assert run(lic) is None, "extensionless prose like LICENSE should pass"
+    kt = transcript(user("guard"), tool("Edit", file_path=os.path.join(proj, "app", "Parser.KT"), new_string=five), result)
+    assert run(kt)["decision"] == "block", "code extensions count, in any case"
+    docker = transcript(user("image"), tool("Write", file_path=os.path.join(proj, "Dockerfile"), content=five), result)
+    assert run(docker)["decision"] == "block", "Dockerfile counts as code"
     os.environ["CLAUDE_CODE_SESSION_ATTENDED"] = "0"
     assert run(edit_turn) is None, "unattended runs (claude -p, cron) should pass"
     os.environ.pop("CLAUDE_CODE_SESSION_ATTENDED")

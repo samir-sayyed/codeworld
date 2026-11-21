@@ -24,7 +24,7 @@ If `WORLD.md` exists at the repo root, tell 1 and 2 using its places and charact
 - read-only turns
 - typo-sized edits
 - files outside the project
-- `.md` and `.txt` files
+- anything that isn't a code or config file (README, LICENSE, notes, images). The list of code extensions is `CODE` in `hook.py`.
 - unattended runs (`claude -p`, cron and launchd jobs)
 - the explain-back itself
 
