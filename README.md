@@ -131,3 +131,7 @@ skills/explain-back/SKILL.md   the skill, for on-demand use and install notes
 examples/WORLD.md              a world template for a made-up app
 docs/research.md               the research behind this project
 ```
+
+## License
+
+[MIT](LICENSE)
