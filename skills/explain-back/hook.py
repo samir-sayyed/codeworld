@@ -14,7 +14,7 @@ MIN_LINES = 3  # ponytail: skip typo-sized edits; raise it if the explain-back f
 CODE = {".kt", ".kts", ".java", ".scala", ".groovy", ".gradle", ".py", ".ipynb", ".js", ".jsx", ".mjs",
         ".cjs", ".ts", ".tsx", ".vue", ".svelte", ".html", ".css", ".scss", ".go", ".rs", ".swift",
         ".m", ".mm", ".c", ".h", ".cc", ".cpp", ".hpp", ".cs", ".rb", ".php", ".dart", ".lua", ".sh",
-        ".bash", ".zsh", ".sql", ".json", ".yaml", ".yml", ".toml", ".xml", ".properties", ".tf"}
+        ".bash", ".zsh", ".sql", ".json", ".yaml", ".yml", ".toml", ".xml", ".properties", ".tf", ".hcl"}
 CODE_NAMES = {"Dockerfile", "Makefile"}
 
 
